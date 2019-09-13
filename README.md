@@ -1,2 +1,2 @@
-# tutorial
-tutorials sample for Java Concepts and open source projects
+# Java spring examples
+ Java Srping Concepts example projects
