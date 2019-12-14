@@ -21,7 +21,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
 
-    @Bean
+    /*@Bean
     @ConfigurationProperties("spring.datasource")
     public DataSource ds() {
     	DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -30,21 +30,33 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         dataSource.setUsername("postgres");
         dataSource.setPassword("adaab@123");
         return dataSource;
+    }*/
+    	@Bean
+    @ConfigurationProperties("spring.datasource")
+    public DataSource ds() {
+    	DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://127.0.0.1/user_db");
+        dataSource.setUsername("root");
+        dataSource.setPassword("root");
+        return dataSource;
     }
     	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
 		auth.jdbcAuthentication().dataSource(dataSource)
-				.authoritiesByUsernameQuery("select user_name, role from userdetails where user_name=?")
-				.usersByUsernameQuery("select user_name, password, 1 as enabled  from userdetails where user_name=?");
+				.authoritiesByUsernameQuery("select username, role from userdetails u left join role r on u.user_id = r.user_id where username=?")
+				.usersByUsernameQuery("select username, password, 1 as enabled  from userdetails where username=?");
 	}
 
 	@Override
 	protected void configure(HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.authorizeRequests().anyRequest().fullyAuthenticated().antMatchers("**/rest/admin/*")
+		httpSecurity.authorizeRequests().anyRequest()
+				.fullyAuthenticated().antMatchers("**/rest/admin/*")
 				.hasRole("ADMIN").antMatchers("**/rest/user/*").hasAnyRole("USER", "ADMIN")
-				.and().httpBasic();
+				.and().httpBasic()
+				.and().logout().permitAll();
 		httpSecurity.addFilterBefore(customFilter(), BasicAuthenticationFilter.class)
 				.csrf()
 				.disable();
